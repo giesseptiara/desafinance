@@ -67,6 +67,7 @@ async function getDashboard(req, res) {
         );
 
         const balance = totalIncome - totalExpense;
+        const remainingBudget = totalBudget - totalExpense;
 
         res.json({
             success: true,
@@ -76,6 +77,7 @@ async function getDashboard(req, res) {
                 totalIncome,
                 totalExpense,
                 balance,
+                remainingBudget,
                 totalIncomeTransactions:
                     Number(
                         incomeResult.rows[0]
