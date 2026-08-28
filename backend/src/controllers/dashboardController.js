@@ -23,6 +23,44 @@ async function getDashboard(req, res) {
             FROM expenses
         `;
 
+        let recentTransactionsQuery = `
+    SELECT *
+    FROM (
+        SELECT
+            i.id,
+            'income' AS type,
+            i.amount,
+            i.description,
+            i.transaction_date,
+            ic.name AS category_name
+        FROM incomes i
+        LEFT JOIN income_categories ic ON ic.id = i.category_id
+
+        UNION ALL
+
+        SELECT
+            e.id,
+            'expense' AS type,
+            e.amount,
+            e.description,
+            e.transaction_date,
+            ec.name AS category_name
+        FROM expenses e
+        LEFT JOIN expense_categories ec ON ec.id = e.category_id
+    ) transactions
+`;
+
+if (year) {
+    recentTransactionsQuery += `
+        WHERE EXTRACT(YEAR FROM transaction_date) = $1
+    `;
+}
+
+recentTransactionsQuery += `
+    ORDER BY transaction_date DESC, id DESC
+    LIMIT 5
+`;
+
         const queryParams = [];
 
         if (year) {
@@ -53,6 +91,11 @@ async function getDashboard(req, res) {
             expenseQuery,
             queryParams
         );
+
+        const recentTransactionsResult = await pool.query(
+    recentTransactionsQuery,
+    queryParams
+);
 
         const totalBudget = Number(
             budgetResult.rows[0].total_budget
@@ -87,7 +130,8 @@ async function getDashboard(req, res) {
                     Number(
                         expenseResult.rows[0]
                             .total_expense_transactions
-                    )
+                    ),
+                recentTransactions: recentTransactionsResult.rows
             }
         });
 

@@ -43,16 +43,17 @@ const createIncome = async (req, res) => {
         } = req.body;
 
         if (
-            !budget_id ||
-            !category_id ||
-            !amount ||
-            !transaction_date
-        ) {
-            return res.status(400).json({
-                success: false,
-                message: 'Budget, category, amount, and transaction date are required'
-            });
-        }
+    !budget_id ||
+    !category_id ||
+    !amount ||
+    Number(amount) <= 0 ||
+    !transaction_date
+) {
+    return res.status(400).json({
+        success: false,
+        message: 'Budget, category, amount, and transaction date are required, and amount must be greater than 0'
+    });
+}
 
         const result = await pool.query(`
             INSERT INTO incomes

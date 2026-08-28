@@ -46,13 +46,57 @@ const createExpense = async (req, res) => {
             !budget_id ||
             !category_id ||
             !amount ||
+            Number(amount) <= 0 ||
             !transaction_date
         ) {
             return res.status(400).json({
                 success: false,
-                message: 'Budget, category, amount, and transaction date are required'
+                message: 'Budget, category, amount, and transaction date are required, and amount must be greater than 0'
             });
         }
+
+        const budgetResult = await pool.query(
+    `
+    SELECT total_amount
+    FROM budgets
+    WHERE id = $1
+    `,
+    [budget_id]
+);
+
+if (budgetResult.rows.length === 0) {
+    return res.status(404).json({
+        success: false,
+        message: 'Budget not found'
+    });
+}
+
+const budgetAmount = Number(
+    budgetResult.rows[0].total_amount
+);
+
+const expenseResult = await pool.query(
+    `
+    SELECT COALESCE(SUM(amount), 0) AS total_expense
+    FROM expenses
+    WHERE budget_id = $1
+    `,
+    [budget_id]
+);
+
+const currentExpense = Number(
+    expenseResult.rows[0].total_expense
+);
+
+const newTotalExpense =
+    currentExpense + Number(amount);
+
+if (newTotalExpense > budgetAmount) {
+    return res.status(400).json({
+        success: false,
+        message: 'Total expense exceeds the selected budget'
+    });
+}
 
         const result = await pool.query(`
             INSERT INTO expenses

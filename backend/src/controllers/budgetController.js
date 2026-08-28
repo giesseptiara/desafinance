@@ -139,7 +139,45 @@ async function updateBudget(req, res) {
             });
         }
 
-        const result = await pool.query(`
+        const budgetResult = await pool.query(
+            `
+            SELECT id
+            FROM budgets
+            WHERE id = $1
+            `,
+            [id]
+        );
+
+        if (budgetResult.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Budget not found'
+            });
+        }
+
+        const expenseResult = await pool.query(
+            `
+            SELECT COALESCE(SUM(amount), 0) AS total_expense
+            FROM expenses
+            WHERE budget_id = $1
+            `,
+            [id]
+        );
+
+        const totalExpense = Number(
+            expenseResult.rows[0].total_expense
+        );
+
+        if (Number(total_amount) < totalExpense) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    'Budget cannot be lower than the total existing expenses'
+            });
+        }
+
+        const result = await pool.query(
+            `
             UPDATE budgets
             SET
                 year = $1,
@@ -156,20 +194,15 @@ async function updateBudget(req, res) {
                 description,
                 created_at,
                 updated_at
-        `, [
-            year,
-            name,
-            total_amount,
-            description || null,
-            id
-        ]);
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'Budget not found'
-            });
-        }
+            `,
+            [
+                year,
+                name,
+                total_amount,
+                description || null,
+                id
+            ]
+        );
 
         res.json({
             success: true,
@@ -191,11 +224,36 @@ async function deleteBudget(req, res) {
     try {
         const { id } = req.params;
 
-        const result = await pool.query(`
+        const transactionResult = await pool.query(
+            `
+            SELECT
+                (SELECT COUNT(*) FROM incomes WHERE budget_id = $1) +
+                (SELECT COUNT(*) FROM expenses WHERE budget_id = $1)
+                AS total_transactions
+            `,
+            [id]
+        );
+
+        const totalTransactions = Number(
+            transactionResult.rows[0].total_transactions
+        );
+
+        if (totalTransactions > 0) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    'Budget cannot be deleted because it already has transactions'
+            });
+        }
+
+        const result = await pool.query(
+            `
             DELETE FROM budgets
             WHERE id = $1
             RETURNING id
-        `, [id]);
+            `,
+            [id]
+        );
 
         if (result.rows.length === 0) {
             return res.status(404).json({
