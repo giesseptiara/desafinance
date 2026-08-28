@@ -2,12 +2,13 @@ import { NavLink, Outlet } from 'react-router-dom'
 
 function DashboardLayout() {
   const menuItems = [
-    { name: 'Dashboard', path: '/dashboard' },
-    { name: 'Anggaran', path: '/budgets' },
-    { name: 'Pendapatan', path: '/incomes' },
-    { name: 'Belanja', path: '/expenses' },
-    { name: 'Kategori', path: '/categories' },
-  ]
+  { name: 'Dashboard', path: '/dashboard' },
+  { name: 'Anggaran', path: '/budgets' },
+  { name: 'Pendapatan', path: '/incomes' },
+  { name: 'Belanja', path: '/expenses' },
+  { name: 'Kategori', path: '/categories' },
+  { name: 'Profil Desa', path: '/profile' },
+]
 
   return (
     <div className="min-h-screen bg-slate-100 flex">

@@ -148,8 +148,49 @@ async function getPublicTransactions(req, res) {
     }
 }
 
+async function getPublicProfile(req, res) {
+    try {
+        const result = await pool.query(`
+            SELECT
+                id,
+                name,
+                code,
+                address,
+                village_head,
+                phone,
+                email
+            FROM desa_profile
+            ORDER BY id ASC
+            LIMIT 1
+        `);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Village profile not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Public profile error:', error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Failed to load public profile'
+        });
+    }
+}
+
+
+
 module.exports = {
     getPublicSummary,
     getPublicBudgets,
-    getPublicTransactions
+    getPublicTransactions,
+    getPublicProfile
 };
