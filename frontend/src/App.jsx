@@ -5,13 +5,14 @@ import Dashboard from './pages/Dashboard'
 import Budgets from './pages/Budgets'
 import Incomes from './pages/Incomes'
 import Expenses from './pages/Expenses'
+import PublicDashboard from './pages/PublicDashboard'
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         {/* Halaman awal */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<PublicDashboard />} />
 
         {/* Login */}
         <Route path="/login" element={<Login />} />
@@ -22,6 +23,7 @@ function App() {
           <Route path="/budgets" element={<Budgets />} />
           <Route path="/incomes" element={<Incomes />} />
           <Route path="/expenses" element={<Expenses />} />
+          <Route path="/transparansi" element={<PublicDashboard />} />
         </Route>
       </Routes>
     </BrowserRouter>

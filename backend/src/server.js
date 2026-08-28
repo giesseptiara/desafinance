@@ -11,6 +11,7 @@ const incomeRoutes = require('./routes/incomeRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 
 const categoryRoutes = require('./routes/categoryRoutes');
+const publicRoutes = require('./routes/publicRoutes');
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.use('/api/budgets', budgetRoutes);
 app.use('/api/incomes', incomeRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/public', publicRoutes);
 
 app.listen(PORT, () => {
     console.log(`DesaFinance API running on http://localhost:${PORT}`);
