@@ -8,6 +8,8 @@ import Expenses from './pages/Expenses'
 import PublicDashboard from './pages/PublicDashboard'
 import Profile from './pages/Profile'
 import ProtectedRoute from './components/ProtectedRoute'
+import PublicBudgets from './pages/PublicBudgets'
+import PublicTransactions from './pages/PublicTransactions'
 
 function App() {
   return (
@@ -16,6 +18,16 @@ function App() {
 
         {/* Halaman publik */}
         <Route path="/" element={<PublicDashboard />} />
+
+        <Route
+          path="/public/budgets"
+          element={<PublicBudgets />}
+        />
+
+        <Route
+          path="/public/transactions"
+          element={<PublicTransactions />}
+        />
 
         {/* Login */}
         <Route path="/login" element={<Login />} />

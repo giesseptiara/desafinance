@@ -57,6 +57,19 @@ async function getPublicSummary(req, res) {
 
 async function getPublicBudgets(req, res) {
     try {
+        const page = Math.max(Number(req.query.page) || 1, 1);
+        const limit = Math.min(
+            Math.max(Number(req.query.limit) || 10, 1),
+            50
+        );
+
+        const offset = (page - 1) * limit;
+
+        const countResult = await pool.query(`
+            SELECT COUNT(*) AS total
+            FROM budgets
+        `);
+
         const result = await pool.query(`
             SELECT
                 id,
@@ -66,11 +79,23 @@ async function getPublicBudgets(req, res) {
                 description
             FROM budgets
             ORDER BY year DESC, id DESC
-        `);
+            LIMIT $1 OFFSET $2
+        `, [
+            limit,
+            offset
+        ]);
+
+        const total = Number(countResult.rows[0].total);
 
         res.json({
             success: true,
-            data: result.rows
+            data: result.rows,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
         });
 
     } catch (error) {
@@ -85,9 +110,39 @@ async function getPublicBudgets(req, res) {
 
 async function getPublicTransactions(req, res) {
     try {
-        const { year } = req.query;
+        const {
+            year,
+            type,
+            page = 1,
+            limit = 10
+        } = req.query;
 
-        let query = `
+        const currentPage = Math.max(Number(page) || 1, 1);
+        const perPage = Math.min(
+            Math.max(Number(limit) || 10, 1),
+            50
+        );
+
+        const offset = (currentPage - 1) * perPage;
+
+        const conditions = [];
+        const params = [];
+
+        if (year) {
+            params.push(Number(year));
+            conditions.push(
+                `EXTRACT(YEAR FROM transaction_date) = $${params.length}`
+            );
+        }
+
+        if (type === 'income' || type === 'expense') {
+            params.push(type);
+            conditions.push(
+                `type = $${params.length}`
+            );
+        }
+
+        let baseQuery = `
             SELECT *
             FROM (
                 SELECT
@@ -116,26 +171,49 @@ async function getPublicTransactions(req, res) {
             ) transactions
         `;
 
-        const params = [];
-
-        if (year) {
-            query += `
-                WHERE EXTRACT(YEAR FROM transaction_date) = $1
+        if (conditions.length > 0) {
+            baseQuery += `
+                WHERE ${conditions.join(' AND ')}
             `;
-
-            params.push(Number(year));
         }
 
-        query += `
-            ORDER BY transaction_date DESC, id DESC
-            LIMIT 50
+        const countQuery = `
+            SELECT COUNT(*) AS total
+            FROM (
+                ${baseQuery}
+            ) filtered_transactions
         `;
 
-        const result = await pool.query(query, params);
+        const countResult = await pool.query(
+            countQuery,
+            params
+        );
+
+        const total = Number(countResult.rows[0].total);
+
+        const dataQuery = `
+            ${baseQuery}
+            ORDER BY transaction_date DESC, id DESC
+            LIMIT $${params.length + 1}
+            OFFSET $${params.length + 2}
+        `;
+
+        const dataResult = await pool.query(
+            dataQuery,
+            [...params, perPage, offset]
+        );
+
+        const totalPages = Math.ceil(total / perPage);
 
         res.json({
             success: true,
-            data: result.rows
+            data: dataResult.rows,
+            pagination: {
+                page: currentPage,
+                limit: perPage,
+                total,
+                totalPages
+            }
         });
 
     } catch (error) {
@@ -186,11 +264,42 @@ async function getPublicProfile(req, res) {
     }
 }
 
+async function getPublicTransactionYears(req, res) {
+    try {
+        const result = await pool.query(`
+            SELECT DISTINCT
+                EXTRACT(YEAR FROM transaction_date)::INTEGER AS year
+            FROM (
+                SELECT transaction_date
+                FROM incomes
 
+                UNION ALL
+
+                SELECT transaction_date
+                FROM expenses
+            ) transactions
+            ORDER BY year DESC
+        `);
+
+        res.json({
+            success: true,
+            data: result.rows.map((row) => row.year)
+        });
+
+    } catch (error) {
+        console.error('Public transaction years error:', error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Failed to load transaction years'
+        });
+    }
+}
 
 module.exports = {
     getPublicSummary,
     getPublicBudgets,
     getPublicTransactions,
+    getPublicTransactionYears,
     getPublicProfile
 };

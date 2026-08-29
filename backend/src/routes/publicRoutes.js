@@ -4,6 +4,7 @@ const {
     getPublicSummary,
     getPublicBudgets,
     getPublicTransactions,
+    getPublicTransactionYears,
     getPublicProfile
 } = require('../controllers/publicController');
 
@@ -13,5 +14,6 @@ router.get('/summary', getPublicSummary);
 router.get('/budgets', getPublicBudgets);
 router.get('/transactions', getPublicTransactions);
 router.get('/profile', getPublicProfile);
+router.get('/transaction-years', getPublicTransactionYears);
 
 module.exports = router;

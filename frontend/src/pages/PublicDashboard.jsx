@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { apiRequest } from '../services/api'
+import { Link } from 'react-router-dom'
 
 function PublicDashboard() {
   const [data, setData] = useState(null)
@@ -364,11 +365,16 @@ function PublicDashboard() {
 
               <h3 className="text-xl font-bold mt-1">
                 Anggaran Desa
-              </h3>
+              </h3> 
 
               <p className="text-sm text-slate-500 mt-1">
                 Daftar anggaran yang tercatat dalam sistem.
-              </p>
+              </p> <Link
+  to="/public/budgets"
+  className="text-sm font-medium text-violet-600 hover:text-violet-800"
+>
+  Lihat Semua →
+</Link>
 
             </div>
 
@@ -466,11 +472,17 @@ function PublicDashboard() {
 
               <h3 className="text-xl font-bold mt-1">
                 Transaksi Keuangan
-              </h3>
+              </h3> 
 
               <p className="text-sm text-slate-500 mt-1">
                 Riwayat pendapatan dan belanja terbaru.
               </p>
+              <Link
+    to="/public/transactions"
+    className="text-sm font-medium text-violet-600 hover:text-violet-800"
+  >
+    Lihat Semua →
+  </Link>
 
             </div>
 
