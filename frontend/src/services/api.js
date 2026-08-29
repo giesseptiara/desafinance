@@ -1,4 +1,4 @@
-const API_URL = 'https://desafinance-production.up.railway.app/api'
+const API_URL = 'https://desafinance.up.railway.app/api'
 
 export async function apiRequest(endpoint, options = {}) {
   const token = localStorage.getItem('token')
